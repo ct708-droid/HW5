@@ -1,0 +1,63 @@
+---
+title: "E-commerce Sales Decomposition"
+output: html_document
+---
+
+## My data
+
+I used quarterly U.S. e-commerce sales, measured in millions of dollars. The data is not seasonally adjusted. Decomposition separates the sales into a trend, a seasonal pattern, and the remaining variation.
+
+```{r}
+library(fpp2)
+ECOMNSA <- read.csv("ECOMNSA.csv")
+sales <- ts(ECOMNSA$ECOMNSA, start = c(1999, 4), frequency = 4)
+head(sales)
+plot(sales)
+```
+
+Sales have increased over time. There are also repeating quarterly ups and downs, with larger seasonal swings in recent years.
+
+## STL decomposition
+
+```{r}
+stl_decomp <- stl(sales, s.window = "periodic")
+plot(stl_decomp)
+attributes(stl_decomp)
+```
+
+The trend shows the longer-term movement in sales. The seasonal component shows the pattern that repeats each year. The remainder is what is left after removing the trend and seasonality. Using "periodic" keeps the seasonal pattern the same each year.
+
+## Seasonally adjusted sales
+
+```{r}
+seasadj(stl_decomp)
+plot(sales)
+lines(seasadj(stl_decomp), col = "Red")
+```
+
+The black line shows the original sales, and the red line shows sales after removing the estimated seasonal pattern. This helps me see changes beyond the usual quarterly ups and downs.
+
+## Forecast from the decomposition
+
+```{r}
+f_stl <- forecast(stl_decomp, h = 15)
+f_stl
+plot(f_stl)
+```
+
+Like the lecture example, I forecast 15 periods ahead. For my data, this means 15 quarters. The shaded areas show uncertainty around the predicted sales.
+
+## Classical decomposition
+
+```{r}
+decomp_sales <- decompose(sales)
+plot(decomp_sales)
+attributes(decomp_sales)
+seasadj(decomp_sales)
+```
+
+This is another way to separate sales into trend, seasonal, and random components. Some trend values at the beginning and end are missing because this method needs observations on both sides to calculate the trend.
+
+## What I learned
+
+E-commerce sales show both long-term growth and a repeating seasonal pattern. I used the additive methods from the lecture example. Because the seasonal swings grow as sales increase, a multiplicative decomposition may be more suitable for this dataset.
